@@ -1,0 +1,127 @@
+import com.kms.katalon.core.webui.driver.DriverFactory
+import com.kms.katalon.core.webui.keyword.WebUiBuiltInKeywords as WebUI
+
+import java.sql.Time
+import java.util.concurrent.TimeUnit
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Cell
+import org.openqa.selenium.By
+import org.openqa.selenium.Keys as Keys
+import org.openqa.selenium.TakesScreenshot
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebElement
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.support.ui.ExpectedConditions
+import org.openqa.selenium.support.ui.Select
+import org.openqa.selenium.support.ui.WebDriverWait
+import java.io.InputStream
+//
+//
+//
+//
+def setUp()
+{
+	System.setProperty("webdriver.chrome.driver", "D:\\chromedriver.exe")
+	WebDriver driver = new ChromeDriver()
+	driver.navigate().to("http://172.16.7.34:8000/0903231438")
+	driver.manage().window().maximize()
+	driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS)
+	return driver
+}
+//
+//
+def login(driver)
+{
+	WebElement inputUser =  driver.findElement(By.xpath("//input[@field='email']"))
+	inputUser.sendKeys('0903231438@yopmail.com')
+	WebElement inputPassw = driver.findElement(By.xpath("//input[@type='password']"))
+	inputPassw.sendKeys('Hoilamgi123@@')
+	WebDriverWait wait = new WebDriverWait(driver, 300)
+	wait.until(ExpectedConditions.elementToBeClickable(driver.findElement(By.xpath("//button[@type='submit']")))).click()
+	Time.sleep(2000)
+	driver.findElement(By.xpath("/html/body/lib-layout-portal/div[3]/div/div/codx-header/div/div[3]/div/erm-quick-links-inner/div/button")).click()
+	driver.findElement(By.xpath("//span[text()='Quản trị nhân sự']")).click()
+	Time.sleep(2000)
+	driver.findElement(By.xpath("//span[@data-funcid='HRT03']")).click()
+	Time.sleep(1000)
+}
+//
+//
+//
+def create_list_nv(driver,username,gender,dob,pob,phone,email,thuongtru,tamtru, chucdanh)
+{
+	WebElement btnAdd = new WebDriverWait(driver, 10).until(ExpectedConditions.elementToBeClickable(By.xpath("//span[@data-name='btnAdd']")))
+	btnAdd.click()
+	Time.sleep(1000)
+	WebElement userName = driver.findElement(By.xpath("//input[@placeholder='Nhập tên nhân viên...']"))
+	userName.sendKeys(username)
+	if (gender == 'Nam')
+	{
+		driver.findElement(By.xpath("/html/body/lib-layout/div[1]/div/aside/lib-popup-add-employees/codx-layout-add/codx-form/div/div[2]/div[2]/div/div/div[1]/div[2]/div[3]/div[1]/div/codx-input/codx-valuelist/ejs-dropdownlist/span")).click()
+		Time.sleep(1000)
+		driver.findElement(By.xpath("//li[@data-value='1']")).click()
+	}	
+	else if (gender == 'Nữ')
+		{
+			driver.findElement(By.xpath("/html/body/lib-layout/div[1]/div/aside/lib-popup-add-employees/codx-layout-add/codx-form/div/div[2]/div[2]/div/div/div[1]/div[2]/div[3]/div[1]/div/codx-input/codx-valuelist/ejs-dropdownlist/span")).click()
+			Time.sleep(1000)
+			driver.findElement(By.xpath("//li[@data-value='2']")).click()
+		}
+	WebElement dateOfBirth = driver.findElement(By.xpath("//input[@placeholder='Nhập ngày sinh...']"))
+	dateOfBirth.sendKeys(dob)
+	WebElement placeOfBirth = driver.findElement(By.xpath("//input[@placeholder='Nhập nơi sinh...']"))
+	placeOfBirth.sendKeys(pob)
+	placeOfBirth.sendKeys(Keys.ENTER)
+	WebElement input_phone = driver.findElement(By.xpath("//input[@placeholder='Nhập số điện thoại...']"))
+	input_phone.sendKeys(phone)
+	WebElement input_email = driver.findElement(By.xpath("//input[@placeholder='Nhập email...']"))
+	input_email.sendKeys(email)
+	WebElement dc_thuongtru = driver.findElement(By.xpath("//input[@placeholder='Nhập địa chỉ thường trú...']"))
+	dc_thuongtru.sendKeys(thuongtru)
+	WebElement dc_tamtru = driver.findElement(By.xpath("//input[@placeholder='Nhập fulladdress...']"))
+	dc_tamtru.sendKeys(tamtru)
+	Time.sleep(2000)
+	driver.findElement(By.xpath("//span[@data-name='tabInfoEmploy']")).click()
+	driver.findElement(By.xpath("/html/body/lib-layout/div[1]/div/aside/lib-popup-add-employees/codx-layout-add/codx-form/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/codx-input/codx-combobox/ejs-combobox/span/span")).click()
+	WebElement chucdanhcv = driver.findElement(By.xpath("//div[@title='"+chucdanh+"']"))
+	chucdanhcv.click()
+	Time.sleep(1000)
+	WebElement btnLuu = driver.findElement(By.xpath("//span[@data-name='lblSave']"))
+	btnLuu.click()
+	Time.sleep(1000)
+	driver.navigate().refresh()
+	Time.sleep(2000)
+}
+def main()
+{
+	WebDriver driver = setUp()
+	login(driver)
+	String excelFilePath = "D://34_Add_DSNV.xlsx";
+	InputStream inp = new FileInputStream(excelFilePath)
+	Workbook wb = WorkbookFactory.create(inp)
+	Sheet sheet = wb.getSheetAt(2)
+	
+	int data_row =  sheet.getPhysicalNumberOfRows()
+	int data_col = sheet.getRow(0).getLastCellNum()
+	
+	for (int i = 1; i < data_row ; i++)
+		{
+			String username =  sheet.getRow(i).getCell(0).getStringCellValue()
+			String gender = sheet.getRow(i).getCell(1).getStringCellValue()
+			String dob = sheet.getRow(i).getCell(2).getStringCellValue()
+			String pob = sheet.getRow(i).getCell(3).getStringCellValue()
+			String phone = sheet.getRow(i).getCell(4).getStringCellValue()
+			String email = sheet.getRow(i).getCell(5).getStringCellValue()
+			String thuongtru = sheet.getRow(i).getCell(6).getStringCellValue()
+			String tamtru = sheet.getRow(i).getCell(7).getStringCellValue()
+			String chucdanh = sheet.getRow(i).getCell(8).getStringCellValue()
+			String phongban = sheet.getRow(i).getCell(9).getStringCellValue()
+			create_list_nv(driver, username, gender, dob, pob, phone, email, thuongtru, tamtru, chucdanh)
+		}
+}  
+main()
